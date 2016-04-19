@@ -116,6 +116,7 @@ class VolumeDescriptor < DescriptorBase
     @expiration_time   = DateTimeL.new(io.read(17))
     @effective_time    = DateTimeL.new(io.read(17))
     
+    @encoding_le, @encoding_be = get_encoding
     construct_path_table
     @root = @path_table.root
     
@@ -167,6 +168,12 @@ class PrimaryVolumeDescriptor < VolumeDescriptor
     @supplements = []
   end
   
+  private
+  
+  def get_encoding
+    [nil, nil]
+  end
+  
 end
 
 class SupplementaryVolumeDescriptor < VolumeDescriptor
@@ -183,9 +190,17 @@ class SupplementaryVolumeDescriptor < VolumeDescriptor
     
     super
     @info.push(:volume_flag, :escape_sequence)
-    
+  end
+  
+  private
+  
+  def dstr(s); s.b end
+  def astr(s); s.b end
+  def fileid(s); s.b end
+  def set_pvd(pvd); @pvd = pvd end
+  def get_encoding
     joilet = false
-    @encoding_le, @encoding_be = case @escape_sequence
+    le, be = case @escape_sequence
     when /\A\x1b?%\/[@CE]\z/
       joilet = true
       ['utf-16be', 'utf-16be']  # Joilet extention
@@ -202,14 +217,8 @@ class SupplementaryVolumeDescriptor < VolumeDescriptor
        application_id copyright abstract biblio }.each {|attr| instance_variable_set("@#{attr}", instance_variable_get("@#{attr}").force_encoding('utf-16be').encode('utf-8'))}
     end
     
+    [le, be]
   end
-  
-  private
-  
-  def dstr(s); s.b end
-  def astr(s); s.b end
-  def fileid(s); s.b end
-  def set_pvd(pvd); @pvd = pvd end
 end
 
 class VolumePartitionDescriptor < DescriptorBase

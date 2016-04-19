@@ -26,6 +26,10 @@ class FileRecord
     @volume = record[28, 4].unpack('S<')[0]
     name_len = record[32].ord
     @name = record[33, name_len]
+    case @name
+    when "\x00" then @name = '.'
+    when "\x01" then @name = '..'
+    end
     pad = name_len.even? ? 1 : 0
     @dir = parent_dir
     @encoding = enc
@@ -65,12 +69,16 @@ class FileRecord
   end
   
   def path
-    "#{dir}/#{name}".gsub(/\/+/, ?/).sub(/\A\//, '')
+    "#{dir}/#{name}".gsub(/\/+/, ?/)
   end
   
   def name
-    return '' if /\A[\x00\x01]\x00*\z/ =~ @name
-    @name.dup.force_encoding(encoding).rstrip.encode(Riso.external_encoding)
+    #return '' if /\A[\x00\x01]\x00*\z/ =~ @name
+    if root?
+      ?/
+    else
+      @name.dup.force_encoding(encoding).rstrip.encode(Riso.external_encoding)
+    end
   end
   
   def dir
@@ -111,7 +119,7 @@ class FileRecord
     if px && px[:st_mode]
       px[:st_mode]
     else
-      directory? ? ISO9660.directory_mode : ISO9660.file_mode
+      directory? ? Riso.directory_mode : Riso.file_mode
     end
   end
   
@@ -242,6 +250,44 @@ class FileRecord
       # usual file
       IO.binwrite(path, dump)
     end
+  end
+  
+  def ls
+    each_child.collect {|record|
+      mode = record.mode_string
+      nlink = record.nlink || ??
+      uid = record.uid || ??
+      gid = record.gid || ??
+      lbn = record.extent_location
+      size = record.data_size
+      time = record.time
+      sym = record.symlink? ? " -> #{record.symlink}" : ''
+      path = record.path + sym
+      from = record.relocated_from? ? "RELOCATED" : ''
+      to_lbn = record.relocated_to
+      if to_lbn
+        to = entries.find{|r| r.extent_location == to_lbn}
+        to = "~> #{to ? to.path : ??} [LBN #{to_lbn}]"
+      else
+        to = ''
+      end
+      [mode, nlink, uid, gid, lbn, size, time, path, from, to].collect(&:to_s)
+    }.transpose.collect {|strs|
+      len = strs.max_by{|str|str.size}.size
+      strs.collect{|str| [len, str]}
+    }.transpose.collect {|mode, nlink, uid, gid, lbn, size, time, path, from, to|
+      mode = mode[1].ljust(mode[0])
+      nlink = nlink[1].rjust(nlink[0])
+      uid = uid[1].rjust(uid[0])
+      gid = gid[1].rjust(gid[0])
+      lbn = "[LBN #{lbn[1].rjust(lbn[0])}]"
+      size = size[1].rjust(size[0])
+      time = time[1].ljust(time[0])
+      path = path[1].ljust(path[0])
+      from = from[1].ljust(from[0])
+      to = to[1].ljust(to[0])
+      "#{mode} #{nlink} #{uid} #{gid} #{lbn} #{size} #{time} #{path} #{from} #{to}".rstrip
+    }.join(?\n)
   end
   
   def to_s

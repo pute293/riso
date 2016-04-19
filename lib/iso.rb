@@ -60,28 +60,28 @@ class DStringError < EncodingError; end
   end
   
   # get default directory permission (set to dumped directory)
-  def directory_mode
+  def self.directory_mode
     @st_mode_dir
   end
   
   # set default directory permission (set to dumped directory)
-  def directory_mode=(st_mode)
+  def self.directory_mode=(st_mode)
     @st_mode_dir = st_mode
   end
   
   # get default file permission (set to dumped file)
-  def file_mode
+  def self.file_mode
     @st_mode_file
   end
   
   # set default file permission (set to dumped file)
-  def file_mode=(st_mode)
+  def self.file_mode=(st_mode)
     @st_mode_file = st_mode
   end
   
   @strict = false
   @encoding = Encoding.default_external
-  @st_mode_dir  = 0o755 | 0o004000  # drwxr-xr-x
+  @st_mode_dir  = 0o755 | 0o040000  # drwxr-xr-x
   @st_mode_file = 0o644 | 0o100000  # -rw-r--r--
 
 # main class to handle ISO image file

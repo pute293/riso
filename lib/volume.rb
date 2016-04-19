@@ -18,6 +18,10 @@ class Volume
     @svd = pvd.supplements
   end
   
+  def root
+    descriptor.root
+  end
+  
   def descriptor
     case
     when pvd.rockridge?
@@ -64,7 +68,7 @@ class Volume
       lbn = "[LBN #{lbn[1].rjust(lbn[0])}]"
       from = from[1].ljust(from[0])
       to = to[1].ljust(to[0])
-      "#{mode} #{nlink} #{uid} #{gid} #{size} #{time} #{path} #{lbn} #{from} #{to}".rstrip
+      "#{mode} #{nlink} #{uid} #{gid} #{lbn} #{size} #{time} #{path} #{from} #{to}".rstrip
     }.join(?\n)
   end
   
