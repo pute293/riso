@@ -115,8 +115,7 @@ class ISO
   
   # read binary from image file
   # see IO#read
-  def read(length, outbuf='')
-    outbuf.force_encoding('ASCII-8BIT') if @io.binmode?
+  def read(length, outbuf=''.b)
     @io.read(length, outbuf)
   end
   
