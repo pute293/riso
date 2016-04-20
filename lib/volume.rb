@@ -34,42 +34,14 @@ class Volume
   end
   
   def ls
-    entries = descriptor.path_table.to_a
-    entries.collect {|record|
-      mode = record.mode_string
-      nlink = record.nlink || ??
-      uid = record.uid || ??
-      gid = record.gid || ??
-      size = record.data_size
-      time = record.time
-      sym = record.symlink? ? " -> #{record.symlink}" : ''
-      path = record.path + sym
-      lbn = record.extent_location
-      from = record.relocated_from? ? "RELOCATED" : ''
-      to_lbn = record.relocated_to
-      if to_lbn
-        to = entries.find{|r| r.extent_location == to_lbn}
-        to = "~> #{to ? to.path : ??} [LBN #{to_lbn}]"
+    r = "#{root.path}:\n#{root.ls}"
+    r + each_file.collect {|record|
+      if record.directory?
+        "\n\n#{record.path}:\n#{record.ls}"
       else
-        to = ''
+        ''
       end
-      [mode, nlink, uid, gid, size, time, path, lbn, from, to].collect(&:to_s)
-    }.transpose.collect {|strs|
-      len = strs.max_by{|str|str.size}.size
-      strs.collect{|str| [len, str]}
-    }.transpose.collect {|mode, nlink, uid, gid, size, time, path, lbn, from, to|
-      mode = mode[1].ljust(mode[0])
-      nlink = nlink[1].rjust(nlink[0])
-      uid = uid[1].rjust(uid[0])
-      gid = gid[1].rjust(gid[0])
-      size = size[1].rjust(size[0])
-      time = time[1].ljust(time[0])
-      path = path[1].ljust(path[0])
-      lbn = "[LBN #{lbn[1].rjust(lbn[0])}]"
-      from = from[1].ljust(from[0])
-      to = to[1].ljust(to[0])
-      "#{mode} #{nlink} #{uid} #{gid} #{lbn} #{size} #{time} #{path} #{from} #{to}".rstrip
-    }.join(?\n)
+    }.join
   end
   
   def each_file

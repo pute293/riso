@@ -291,16 +291,11 @@ class FileRecord
   end
   
   def to_s
-    #"#{mode_string} #{nlink || ??} #{uid || ??} #{gid || ??} #{'%4d' % data_size} #{time} #{path} [LBN #{'%4d' % extent_location}]".tap do |s|
-    #  s << " -> #{symlink}" if symlink?
-    #  #s << " RELOCATED" if relocated_from?
-    #  #s << " ~> 
-    #end
-    inspect
+    path
   end
   
   def inspect
-    "#{path} => volume: #{@volume}; block: #{@extent_location} (0x#{@extent_location.to_s(16)}); data size: #{@data_size} bytes; SUSP: #{@susp}"
+    "#<{path} volume: #{@volume}; block: #{@extent_location} (0x#{@extent_location.to_s(16)}); data size: #{@data_size} bytes; SUSP: #{@susp}>"
   end
   
   private
