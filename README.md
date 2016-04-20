@@ -8,7 +8,7 @@ pure ruby implemented ISO image extractor
     # open ISO image
     iso = Riso.open('ubuntu-15.10-desktop-amd64.iso')
     
-    # Enumerate Descriptors in an iso image
+    # enumerate Descriptors in an iso image
     iso.descriptors.each do |type, desc|
       puts ?= * 80
       puts type
@@ -18,13 +18,13 @@ pure ruby implemented ISO image extractor
     
     puts
     
-    # Enumerate volumes in an iso image
+    # enumerate volumes in an iso image
     iso.volumes.each do |volume|
       puts volume.name
       puts volume
       puts volume.ls  # ls -lR
       
-      # Enumerate files in a volume (you can also use #each method)
+      # enumerate files in a volume
       volume.each_with_index do |file, idx|
         # dump file content
         puts "#{idx} => #{file}"
